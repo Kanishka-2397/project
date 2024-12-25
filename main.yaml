@@ -1,0 +1,90 @@
+---
+# tasks file for ./roles/LAMP
+- name:  update package cache
+  dnf:
+    update_cache: yes
+- name: installing and configuration LAMP
+  package: 
+    name:
+    - httpd    #apache web server
+    - mariadb* # mysql/mariadb server
+    - php-mysqlnd   # php native Driver
+    - php           # php
+    - php-fpm        # php fast process manager
+
+    state: present
+- name: configure repo on aws
+  template:
+    src: lamp.repo
+    dest: /etc/yum.repos.d/rpmfind.repo
+- name: start and enable apache service
+  service: 
+    name: httpd
+    state: restarted
+    enabled: yes
+- name: start and enable mariadb service
+  service:
+    name: mariadb
+    state: started
+    enabled: yes
+- name: Install pip for Python 3
+  package:
+    name: python3-pip
+    state: present
+- name: Install PyMySQL as an alternative
+  pip:
+    name: PyMySQL
+    executable: pip3
+- name: secure MYSQL installation
+  mysql_user:
+    name: admin
+    password: kook
+    login_user: root
+    login_password: kook
+    login_unix_socket: /var/lib/mysql/mysql.sock
+    state: present
+- name: create a test user
+  mysql_user: 
+    name: test_user
+    password: test_pass
+    login_user: root
+    login_password: kook
+    host: '%'
+    state: present
+- name: Grant privileges to test database
+  mysql_query:
+    query: "GRANT ALL PRIVILEGES ON test_db.* TO 'root'@'%' IDENTIFIED BY 'kook';"
+    login_user: root
+    login_password: kook
+- name: create the test database
+  mysql_query:
+    query: "CREATE DATABASE IF NOT EXISTS test_db;"
+    login_user: root
+    login_password: kook
+- name: Flush privileges
+  mysql_query:
+    query: "FLUSH PRIVILEGES;"
+    login_user: root
+    login_password: kook
+- name: start and enabled php-fpm is running
+  service: 
+    name: php-fpm
+    state: started
+    enabled: yes
+- name: create a php info file
+  copy:
+    content: |
+      <? php
+      phpinfo();
+    dest: /var/www/html/info.php
+    owner: apache
+    group: apache
+    mode: '0644'
+- name: Enable Apache PHP-FPM configuration
+  lineinfile:
+    path: /etc/httpd/conf.d/php.conf
+    line: 'SetHandler "proxy:unix:/run/php-fpm/www.sock|fcgi://localhost/"'
+    create: yes
+
+
+

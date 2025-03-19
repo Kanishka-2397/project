@@ -20,6 +20,61 @@ def dev():
     print(a%b)
 
 
+num1 = int(input("enter the first value:"))
+num2 = int(input("enter the second value:"))
+calu = input(f"choose the operators[add, sub, mul, div, modul, power, floor]:")
+if (calu == "add"):
+    print(f"{num1} and {num2} add value {num1+num2}")
+elif (calu == "sub"):
+    print(f" {num1} and {num2} sub value {num1-num2}")
+elif (calu == "mul"):
+    print(f" {num1} and {num2} mulvalue {num1*num2}")
+elif (calu == "div"):
+    try:
+        print(f"The {num1} and{num2} div value {num1/num2}")
+    except ZeroDivisionError:
+        print ("ERROR: division by zero is not allowed.")
+elif (calu == "modul"):
+    print(f" The {num1} and{num2}modul value {num1%num2}")
+elif (calu == "power"):
+    print(f" The {num1} and {num2}power value {num1**num2}")
+elif (calu == "floor"):
+    print(f" The {num1} and {num2} floor value {num1//num2}")
+elif input():
+    while True:
+        try:
+           print (input())
+        except ValueError:
+           print("invalid input.please enter a numeric value")
+else:
+    print("choose correct operators")
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 def findpassorfail(num):
     if(num>35):

@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: mysql-secret
+type: Opaque
+data:
+  mysql-root-password: a29vaw==
+  mysql-user: a2FuaXNoa2E=
+  mysql-password: a29vaw==
+  DATA_SOURCE_NAME: a2FuaXNoa2E6a29va0B0Y3AobXlzcWw6MzMwNikv
+

@@ -1,14 +1,10 @@
-import os
-import requests
-from selenium import webdriver
-from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from bs4 import BeautifulSoup
-from urllib.parse import urljoin, urlparse
-import time
+from bs4 import BeautifulSoup #parsing HTML and extracting data
+from urllib.parse import urljoin, urlparse # clean/join URLs
+import time #pause execution where needed
 
 DOWNLOAD_FOLDER = "downloaded_data"  # folder name set
 os.makedirs(DOWNLOAD_FOLDER, exist_ok=True)  # folder create
@@ -19,6 +15,7 @@ def download_file(url, filename): # fun call
         response = requests.get(url, stream=True, timeout=10, headers=headers) # variable store
         if response.status_code == 200: #request check
             with open(filename, 'wb') as f: 
+                # chunk-- used to stream the safely and efficiently
                 for chunk in response.iter_content(1024):
                     f.write(chunk)
             print(f"Downloaded: {filename}")
@@ -30,13 +27,14 @@ def download_file(url, filename): # fun call
 def get_support_pdf_links(model_id):
     support_url = f"https://www.lg.com/us/support/product/{model_id}"
     print(f"Fetching support PDFs from: {support_url}")
-    options = Options()
-    options.add_argument("--headless")
-    options.add_argument("--disable-gpu")  # without windows run
-    options.add_argument("--no-sandbox")
+    options = Options() # chrome option
+    options.add_argument("--headless") # run without a visible windows
+    options.add_argument("--disable-gpu")  # disbles GPU hardware acceleration
+    options.add_argument("--no-sandbox")  # security sandbox 
     driver = webdriver.Chrome(service=Service(), options=options)
 
     pdf_links = []
+    # scripted web scraping, low resource env, ci pipelines or docker containers
 
     try:
         driver.get(support_url)
@@ -72,14 +70,15 @@ def get_data_from_product_page(url):
         time.sleep(4)
         soup = BeautifulSoup(driver.page_source, "html.parser")
 
-        path = urlparse(url).path
-        model_id = path.strip("/").split("/")[-1].split(".")[0].lower()
-
+        path = urlparse(url).path # path part url
+        model_id = path.strip("/").split("/")[-1].split(".")[0].lower() # convert everything to lowercase
+        #strip-- remove any leading/trailing slashes
+        #split-- take last part of the path
         images = set()
         for img in soup.find_all("img"):
             src = (
                 img.get("src")
-                or img.get("data-src")
+                or img.get("data-src")  # lazy-loaded img or responsive designs
                 or img.get("data-original")
                 or img.get("data-lazy")
                 or img.get("data-srcset")
@@ -126,6 +125,7 @@ open(features_file, "w", encoding="utf-8").close()
 
 # Main loop
 for idx, url in enumerate(product_urls, 1):
+    # enumerate-- loops to automatically add a counter(index)
     print(f"\n[{idx}] Processing product: {url}")
     try:
         data = get_data_from_product_page(url)

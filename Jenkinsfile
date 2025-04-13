@@ -59,23 +59,53 @@ spec:
             }
         }
 
+        stage('Validate kubectl Configuration') {
+            steps {
+                script {
+                    // Ensure KUBECONFIG is set and kubectl can access the cluster
+                    sh 'echo "Checking Kubernetes Cluster Access..."'
+                    sh "kubectl config view"
+                    sh "kubectl get nodes"
+                }
+            }
+        }
+
         stage('Apply to Kubernetes') {
             steps {
-                sh "kubectl apply -f ${DEPLOYMENT_FILE}"
-                sh "kubectl apply -f ${SERVICE_FILE}"
+                script {
+                    // Apply the deployment and service YAML files to Kubernetes
+                    try {
+                        sh "kubectl apply -f ${DEPLOYMENT_FILE}"
+                        sh "kubectl apply -f ${SERVICE_FILE}"
+                    } catch (Exception e) {
+                        currentBuild.result = 'FAILURE'
+                        error "Kubernetes deployment failed: ${e.getMessage()}"
+                    }
+                }
             }
         }
 
         stage('Check Rollout Status') {
             steps {
-                sh "kubectl rollout status deployment/tomcat-war-deployment"
+                script {
+                    // Wait for the deployment to be rolled out successfully
+                    try {
+                        sh "kubectl rollout status deployment/tomcat-war-deployment"
+                    } catch (Exception e) {
+                        currentBuild.result = 'FAILURE'
+                        error "Rollout failed: ${e.getMessage()}"
+                    }
+                }
             }
         }
 
         stage('Verify Deployment') {
             steps {
-                sh "kubectl get pods"
-                sh "kubectl get svc"
+                script {
+                    // Verify the deployed pods and service status
+                    sh "kubectl get pods"
+                    sh "kubectl get svc"
+                }
             }
         }
     }

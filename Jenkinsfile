@@ -2,6 +2,7 @@ pipeline {
     agent any
 
     environment {
+        KUBECONFIG = '/path/to/kubeconfig'  // Make sure this is correct
         DEPLOYMENT_FILE = 'deployment.yaml'
         SERVICE_FILE = 'service.yaml'
         DOCKER_IMAGE = 'kanishka9723/tomcat-sample:v1'

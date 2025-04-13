@@ -2,10 +2,11 @@ pipeline {
     agent any
 
     environment {
-        KUBECONFIG = '/path/to/kubeconfig'  // Ensure this is correct
+        KUBECONFIG = '/var/lib/jenkins/.kube/config' // ✅ Make sure this is correct
         DEPLOYMENT_FILE = 'deployment.yaml'
         SERVICE_FILE = 'service.yaml'
         DOCKER_IMAGE = 'kanishka9723/tomcat-sample:v1'
+        NAMESPACE = 'default'
     }
 
     stages {
@@ -17,6 +18,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: tomcat-war-deployment
+  namespace: ${NAMESPACE}
 spec:
   replicas: 1
   selector:
@@ -27,6 +29,7 @@ spec:
       labels:
         app: tomcat-war
     spec:
+      restartPolicy: Always
       containers:
       - name: tomcat-container
         image: ${DOCKER_IMAGE}
@@ -45,6 +48,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: tomcat-war-service
+  namespace: ${NAMESPACE}
 spec:
   type: NodePort
   selector:
@@ -62,9 +66,8 @@ spec:
         stage('Validate kubectl Configuration') {
             steps {
                 script {
-                    // Check if KUBECONFIG is set and kubectl can access the cluster
                     sh 'echo "Checking Kubernetes Cluster Access..."'
-                    sh 'kubectl version --client'  // Validate kubectl installation
+                    sh 'kubectl version --client'
                     sh "kubectl config view"
                     sh "kubectl get nodes"
                 }
@@ -74,10 +77,9 @@ spec:
         stage('Apply to Kubernetes') {
             steps {
                 script {
-                    // Apply the deployment and service YAML files to Kubernetes
                     try {
-                        sh "kubectl apply -f ${DEPLOYMENT_FILE}"
-                        sh "kubectl apply -f ${SERVICE_FILE}"
+                        sh "kubectl apply -f ${DEPLOYMENT_FILE} --namespace=${NAMESPACE}"
+                        sh "kubectl apply -f ${SERVICE_FILE} --namespace=${NAMESPACE}"
                     } catch (Exception e) {
                         currentBuild.result = 'FAILURE'
                         error "Kubernetes deployment failed: ${e.getMessage()}"
@@ -89,9 +91,8 @@ spec:
         stage('Check Rollout Status') {
             steps {
                 script {
-                    // Wait for the deployment to be rolled out successfully
                     try {
-                        sh "kubectl rollout status deployment/tomcat-war-deployment"
+                        sh "kubectl rollout status deployment/tomcat-war-deployment --namespace=${NAMESPACE}"
                     } catch (Exception e) {
                         currentBuild.result = 'FAILURE'
                         error "Rollout failed: ${e.getMessage()}"
@@ -103,9 +104,8 @@ spec:
         stage('Verify Deployment') {
             steps {
                 script {
-                    // Verify the deployed pods and service status
-                    sh "kubectl get pods"
-                    sh "kubectl get svc"
+                    sh "kubectl get pods --namespace=${NAMESPACE}"
+                    sh "kubectl get svc --namespace=${NAMESPACE}"
                 }
             }
         }
@@ -113,10 +113,10 @@ spec:
 
     post {
         success {
-            echo 'Deployment completed successfully.'
+            echo '✅ Deployment completed successfully.'
         }
         failure {
-            echo 'Deployment failed. Check Jenkins logs and Kubernetes events.'
+            echo '❌ Deployment failed. Check Jenkins logs and Kubernetes events.'
         }
     }
 }

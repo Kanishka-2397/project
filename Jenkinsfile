@@ -2,8 +2,8 @@ pipeline {
     agent any
 
     environment {
-        DEPLOYMENT_FILE = '/home/ubuntu/deployment.yaml'
-        SERVICE_FILE = '/home/ubuntu/service.yaml'
+        DEPLOYMENT_FILE = 'deployment.yaml'
+        SERVICE_FILE = 'service.yaml'
         DOCKER_IMAGE = 'kanishka9723/tomcat-sample:v1'
     }
 

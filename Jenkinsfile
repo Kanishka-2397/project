@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     environment {
-        KUBECONFIG = '/path/to/kubeconfig'  // Make sure this is correct
+        KUBECONFIG = '/path/to/kubeconfig'  // Ensure this is correct
         DEPLOYMENT_FILE = 'deployment.yaml'
         SERVICE_FILE = 'service.yaml'
         DOCKER_IMAGE = 'kanishka9723/tomcat-sample:v1'
@@ -62,8 +62,9 @@ spec:
         stage('Validate kubectl Configuration') {
             steps {
                 script {
-                    // Ensure KUBECONFIG is set and kubectl can access the cluster
+                    // Check if KUBECONFIG is set and kubectl can access the cluster
                     sh 'echo "Checking Kubernetes Cluster Access..."'
+                    sh 'kubectl version --client'  // Validate kubectl installation
                     sh "kubectl config view"
                     sh "kubectl get nodes"
                 }
